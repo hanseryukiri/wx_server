@@ -10,6 +10,7 @@ See the License for the specific language governing permissions and limitations 
 """
 
 from common.mymako import render_mako_context
+from django.http import HttpResponse
 from wx_crypt import WXBizMsgCrypt
 
 def home(request):
@@ -23,21 +24,24 @@ def resp(request):
     nonce = request.GET.get('nonce')
     timestamp = request.GET.get('timestamp')
     signature = request.GET.get('signature')
-    encodingAESKey = "WamDqAgkoSWRg1NzU6rTOQHxO1B5H90jfg6C0gb2LQr"
+    echostr = request.GET.get('echostr')
+    encodingAESKey = "L0DCOdO4gwT19Qme65ctAKEPaNKCbDq8mQ8jdwmNQna"
     to_xml = """ <xml><ToUserName><![CDATA[oia2TjjewbmiOUlr6X-1crbLOvLw]]></ToUserName><FromUserName><![CDATA[gh_7f083739789a]]></FromUserName><CreateTime>1407743423</CreateTime><MsgType>  <![CDATA[video]]></MsgType><Video><MediaId><![CDATA[eYJ1MbwPRJtOvIEabaxHs7TX2D-HV71s79GUxqdUkjm6Gs2Ed1KF3ulAOA9H1xG0]]></MediaId><Title><![CDATA[testCallBackReplyVideo]]></Title><Descript  ion><![CDATA[testCallBackReplyVideo]]></Description></Video></xml>"""
     token = "weixin"
     appid = "wx9872d15c79f229bf"
-    print('微信发送的签名',signature)
+    print('wxsend',signature)
     import hashlib
     sortlist = [token, timestamp, nonce]
     sortlist.sort()
     sha = hashlib.sha1()
     sha.update("".join(sortlist))
-    print('本地拼接的签名',sha.hexdigest())
+    print('local',sha.hexdigest())
 
-    encryp = WXBizMsgCrypt(token, encodingAESKey, appid)
+    encryp = WXBizMsgCrypt.WXBizMsgCrypt(token, encodingAESKey, appid)
     ret, encrypt_xml = encryp.EncryptMsg(to_xml, nonce)
     print(ret, encrypt_xml)
-
-    return ret
+    if signature == sha.hexdigest():
+	print('ok')
+        return HttpResponse(echostr)
+    return HttpResponse('')
 
