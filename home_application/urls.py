@@ -13,6 +13,6 @@ from django.conf.urls import patterns
 
 urlpatterns = patterns(
     'home_application.views',
-    (r'^$', 'resp'),
+    (r'^$', 'wx_response'),
 
 )
