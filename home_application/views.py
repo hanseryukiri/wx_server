@@ -21,6 +21,8 @@ url_to_xml = "<xml><ToUserName>< ![CDATA[toUser] ]></ToUserName><FromUserName>< 
 token = "weixin"
 appid = "wx9872d15c79f229bf"
 
+def index(request):
+    return render_mako_context(request, '/home_application/fadein_index.html')
 
 def home(request):
     """
@@ -69,9 +71,9 @@ def wx_response(request):
         print('========')
         print(decryp_xml)
         othercontent = autoreply(decryp_xml, openid)
-	print('------')
-	print(othercontent)
-	print('------')
+        print('------')
+        print(othercontent)
+        print('------')
         return HttpResponse(othercontent)
 
 
@@ -143,9 +145,9 @@ class PhotoTextMsg(object):
         self.__dict['ToUserName'] = to_user_name
         self.__dict['FromUserName'] = from_user_name
         self.__dict['CreateTime'] = int(time.time())
-        self.__dict['Picurl'] = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcWO3m0yLORQ1FqzPhNTZPnXo1oH7qxGGNnwbvr-qbrBFLFOz-'
+        self.__dict[
+            'Picurl'] = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcWO3m0yLORQ1FqzPhNTZPnXo1oH7qxGGNnwbvr-qbrBFLFOz-'
         self.__dict['Url'] = 'http://wxops.invstone.cn/wx/index?openid={}'.format(openid)
-
 
     def send(self):
         xml = """
@@ -164,5 +166,5 @@ class PhotoTextMsg(object):
         </Articles>
         </xml>        
         """
-	print(self.__dict)
+        print(self.__dict)
         return xml.format(**self.__dict)

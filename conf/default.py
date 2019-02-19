@@ -144,7 +144,7 @@ STATICFILES_DIRS = (
 )
 STATIC_VERSION = 0.1
 # 应用本地静态资源目录
-STATIC_URL = '%sstatic/' % SITE_URL
+STATIC_URL = 'static/'
 
 ROOT_URLCONF = 'urls'
 # ==============================================================================
