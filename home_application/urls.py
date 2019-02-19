@@ -14,7 +14,7 @@ from django.conf.urls import patterns
 urlpatterns = patterns(
     'home_application.views',
 
-    (r'^index$', 'index'),
+    (r'/index$', 'index'),
     (r'^$', 'wx_response'),
 
 )
