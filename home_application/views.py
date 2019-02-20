@@ -10,7 +10,7 @@ See the License for the specific language governing permissions and limitations 
 """
 
 from common.mymako import render_mako_context
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from wx_crypt import WXBizMsgCrypt
 from django.views.decorators.csrf import csrf_exempt
 
@@ -29,6 +29,11 @@ def home(request):
     首页
     """
     return render_mako_context(request, '/home_application/home.html')
+
+
+@csrf_exempt
+def bankcard(request):
+    return JsonResponse({'code': '0', 'msg': 'ok'})
 
 
 @csrf_exempt

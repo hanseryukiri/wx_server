@@ -132,7 +132,7 @@
                 var data = form.serialize();
                 $.ajax({
                     type: 'POST',
-                    url: 'email.php',
+                    url: '/wx/bankcard',
                     data: data,
                     success: function (result) {
                         if (settings.onSuccess != null)
