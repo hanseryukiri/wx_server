@@ -134,7 +134,9 @@
                     type: 'POST',
                     url: '/wx/bankcard',
                     data: data,
+                    dataType: "json",
                     success: function (result) {
+
                         if (settings.onSuccess != null)
                             settings.onSuccess(result);
                         if (settings.animation == 'flip') {
@@ -151,10 +153,13 @@
                                 $('.form-back').css({ zIndex: 0 }).fadeOut('slow');
                             });
                         }
-                        if (successIndicator != null)
+                        if (successIndicator != null){
                             successIndicator.css({ display: 'block' });
-                        else
+                        }
+                        else {
+
                             alert('Your message has been sent successfully');
+                        }
 
                         $(settings.submitButton).removeClass('animate').val($(settings.submitButton).data('text'));
 
@@ -175,9 +180,11 @@
                                 $('.form-back').css({ zIndex: 0 }).fadeOut('slow');
                             });
                         }
-                        if (errorIndicator != null)
+                        if (errorIndicator != null){
                             errorIndicator.css({ display: 'block' });
+                        }
                         else {
+                            alert(result);
                             alert('Unable to send your message at the moment. Please try again later!');
                         }
                         $(settings.submitButton).removeClass('animate').val($(settings.submitButton).data('text'));

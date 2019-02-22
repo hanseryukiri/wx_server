@@ -9,10 +9,16 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 See the License for the specific language governing permissions and limitations under the License.
 """
 
+from dailytool import selenium_test
+import requests
+import json
 from common.mymako import render_mako_context
 from django.http import HttpResponse, JsonResponse
 from wx_crypt import WXBizMsgCrypt
 from django.views.decorators.csrf import csrf_exempt
+import logging
+
+logger = logging.getLogger("root")
 
 # 微信公众号信息
 encodingAESKey = "L0DCOdO4gwT19Qme65ctAKEPaNKCbDq8mQ8jdwmNQna"
@@ -21,19 +27,101 @@ url_to_xml = "<xml><ToUserName>< ![CDATA[toUser] ]></ToUserName><FromUserName>< 
 token = "weixin"
 appid = "wx9872d15c79f229bf"
 
+
 def index(request):
+    # 检验用户
+    openid = request.GET.get('opendid')
+    # 获取 access_token
+    resp = requests.get(
+        'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wx9872d15c79f229bf&secret=5f1560a4e631f17bdb48444f274281d2')
+
+    access_token = eval(resp.text)['access_token']
+
+    data = {
+        'tagid': '101',
+    }
+    resp = requests.post('https://api.weixin.qq.com/cgi-bin/user/tag/get?access_token={}'.format(access_token),
+                         data=json.dumps(data))
+
+    openid_list = json.loads(resp.content)['data']['openid']
+    if openid not in openid_list:
+        return HttpResponse(403)
+
     return render_mako_context(request, '/home_application/fadein_index.html')
+
 
 def home(request):
     """
-    首页
-    """
+   首页
+   """
     return render_mako_context(request, '/home_application/home.html')
 
 
 @csrf_exempt
 def bankcard(request):
-    return JsonResponse({'code': '0', 'msg': 'ok'})
+    # 获取参数
+    user_name = requests.POST.get('user_name')
+    real_name = requests.POST.get('real_name')
+    session_id = selenium_test.get_session()
+
+    headers = {
+        "Cookie": "bcsession={}".format(session_id),
+        "host": "bms.shitou.com"
+    }
+    if user_name:
+        data = {
+            "userName": user_name,
+            "realName": "",
+            "idCard": "",
+            "type": -1,
+            "page": 1,
+            "rows": 10,
+        }
+    else:
+        data = {
+            "userName": "",
+            "realName": real_name,
+            "idCard": "",
+            "type": -1,
+            "page": 1,
+            "rows": 10,
+        }
+    # 调用获取userid接口
+    resp = requests.post('http://10.117.20.152:8080/console/memberManage/queryUserInfoList', data=data, headers=headers)
+    user_id = json.loads(resp.content)["rows"][0]["id"]
+
+    # 调用本地银行卡查询接口
+    resp = requests.post('http://10.117.20.152:8080/console/memberManage/localcardInfoList/{}'.format(user_id),
+                         headers=headers)
+    info = json.loads(resp.content)
+    local_bank_type = info["rows"][0]['bankPropTypeFormat']
+    local_bank_card = info["rows"][0]['openAcctId']
+    local_bank_id = info["rows"][0]['openBankId']
+    local_is_default = info["rows"][0]['isDefault']
+    local_is_sign = info["rows"][0]['isSignFormat']
+    local_is_express = info["rows"][0]['expressFlag']
+    # 调用汇付银行卡查询接口
+    resp = requests.post('http://10.117.20.152:8080/console/memberManage/cardInfoComparisonList/{}'.format(user_id),
+                         headers=headers)
+    info = json.loads(resp.content)
+    try:
+        huifu_bank_card = info["rows"][0]['cardId']
+        huifu_bank_id = info["rows"][0]['bankId']
+        huifu_is_default = info["rows"][0]['isDefault']
+        huifu_is_express = info["rows"][0]['expressFlag']
+    except Exception as e:
+        logger.error(e, '汇付银行卡信息读取异常')
+        return JsonResponse({'code': '-1', 'msg': '汇付银行卡信息读取异常请联系运维颜传辉'})
+
+    data = {'code': '0', 'msg': 'ok',
+            'local_info': {"local_bank_type": local_bank_type, 'local_bank_card': local_bank_card,
+                           "local_bank_id": local_bank_id, "local_is_default": local_is_default,
+                           "local_is_sign": local_is_sign, "local_is_express": local_is_express,
+                           "huifu_bank_card": huifu_bank_card, "huifu_bank_id": huifu_bank_id,
+                           "huifu_is_default": huifu_is_default, "huifu_is_express": huifu_is_express
+                           }}
+
+    return JsonResponse(data)
 
 
 @csrf_exempt
